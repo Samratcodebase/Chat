@@ -1,10 +1,13 @@
-const Login=(req , res)=>{
-   
-    res.status(200).json({
-        message:"Login Route",
-        sucess:true,
-    })
- 
-}
+const Login = (req, res) => {
+  res.status(200).json({
+    message: "Login Route",
+    sucess: true,
+  });
+};
 
-export {Login}
+const SignUp = (req, res) => {
+  res
+    .status(200)
+    .json({ message: "Account Creation Succesfull", sucess: true });
+};
+export { Login, SignUp };
