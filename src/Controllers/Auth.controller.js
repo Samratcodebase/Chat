@@ -7,7 +7,34 @@ import {
   sendVerificationEmail,
 } from "../Utils/Email/EmailHandler.js";
 
-const Login = (req, res) => {};
+const Login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    let AccesToken = req.cookies.AccesToken;
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res
+        .status(409)
+        .json(new ApiError(409, "Invalid Email or Password"));
+    }
+
+    if (AccesToken) {
+      return res.status(200).json(new ApiResponse(200, "Already Logined in"));
+    }
+    AccesToken = await user.GenerateAccessToken();
+    res.cookie("AccesToken", AccesToken);
+    const isMatched = await user.ComparePassword(password); //retuns ture or false
+    if (isMatched) {
+      return res.status(200).json(new ApiResponse(200, " Login SuccessFull"));
+    } else {
+      return res
+        .status(409)
+        .json(new ApiError(409, "Invalid Email or Password"));
+    }
+  } catch (error) {
+    console.log("Error in Login Controller", error);
+  }
+};
 
 const SignUp = async (req, res, next) => {
   try {
@@ -74,7 +101,9 @@ const VerifyUser = async (req, res) => {
 
   // Check if token has expired
   if (new Date() > new Date(user.verificationTokenExpires)) {
-    return res.status(410).json(new ApiError(410, "Verification token has expired"));
+    return res
+      .status(410)
+      .json(new ApiError(410, "Verification token has expired"));
   }
 
   user.isVerified = true;
@@ -82,7 +111,9 @@ const VerifyUser = async (req, res) => {
   user.verificationTokenExpires = undefined;
   await user.save();
 
-  return res.status(200).json(new ApiResponse(200, "User verification successful"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "User verification successful"));
 };
 
 export { Login, SignUp, VerifyUser };

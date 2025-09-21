@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { type } from "os";
+
 const UserSchema = new mongoose.Schema(
   {
     username: {
@@ -83,7 +83,13 @@ UserSchema.pre("save", async function (next) {
     next(err);
   }
 });
-
+UserSchema.methods.ComparePassword = async function (candidatePassword) {
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (err) {
+    throw new Error("Error comparing passwords");
+  }
+};
 UserSchema.methods.GenerateAccessToken = function () {
   const payload = { id: this._id, username: this.username };
   return jwt.sign(payload, process.env.JWT_SECRET, {

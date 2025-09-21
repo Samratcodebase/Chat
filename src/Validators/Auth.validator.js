@@ -11,10 +11,12 @@ const SignUpValidator = [
 
 const SinginValidator = [
   body("email").isEmail().withMessage("Invalid Email"),
-  body("email").isEmpty().whitelist("Please Provide Password"),
+  body("password").notEmpty().withMessage("Please Provide Password"),
 ];
 
 const VerificationTokenValidator = [
-  param("token").notEmpty().withMessage("Unauthorized access: token is missing"),
+  param("token")
+    .notEmpty()
+    .withMessage("Unauthorized access: token is missing"),
 ];
 export { SignUpValidator, SinginValidator, VerificationTokenValidator };
