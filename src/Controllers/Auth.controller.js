@@ -1,10 +1,9 @@
+import "dotenv/config";
 import User from "../Models/User.model.js";
 import ApiError from "../Utils/ApiError.js";
 import ApiResponse from "../Utils/ApiResponse.js";
-
-const Login = (req, res) => {
-  
-};
+import { sendWelcomeEmail } from "../Utils/Email/EmailHandler.js";
+const Login = (req, res) => {};
 
 const SignUp = async (req, res, next) => {
   try {
@@ -31,12 +30,17 @@ const SignUp = async (req, res, next) => {
 
     res.cookie("AccesToken", AccesToken);
     res.cookie("RefreshToken", RefreshToken);
-
+    try {
+      //Using Free Resend Account So Use the Email singed up with Resend
+      sendWelcomeEmail(user.email, user.fullName, process.env.CLIENT_URI);
+    } catch (error) {
+      console.log("Error Seding Email", error);
+    }
     return res
       .status(200)
       .json(new ApiResponse(true, "User Creation Successful", 200));
   } catch (err) {
-    next(err); // Send any unhandled errors to your error handler
+    next(err);
   }
 };
 
