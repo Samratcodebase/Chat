@@ -5,10 +5,8 @@ const SignUpValidator = [
   body("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 chars long"),
-  body("name").notEmpty().withMessage("Name is required"),
+  body("username").notEmpty().withMessage("username is required"),
+  body("fullName").notEmpty().withMessage("Full Name is required"),
 ];
 
-
-
-
-export{SignUpValidator}
+export { SignUpValidator };
