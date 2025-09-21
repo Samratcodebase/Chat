@@ -3,10 +3,7 @@ import ApiError from "../Utils/ApiError.js";
 import ApiResponse from "../Utils/ApiResponse.js";
 
 const Login = (req, res) => {
-  res.status(200).json({
-    message: "Login Route",
-    sucess: true,
-  });
+  
 };
 
 const SignUp = async (req, res, next) => {

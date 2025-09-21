@@ -9,4 +9,9 @@ const SignUpValidator = [
   body("fullName").notEmpty().withMessage("Full Name is required"),
 ];
 
-export { SignUpValidator };
+const SinginValidator = [
+  body("email").isEmail().withMessage("Invalid Email"),
+  body("email").isEmpty().whitelist("Please Provide Password"),
+];
+
+export { SignUpValidator, SinginValidator };
