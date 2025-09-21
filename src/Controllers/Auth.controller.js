@@ -2,7 +2,11 @@ import "dotenv/config";
 import User from "../Models/User.model.js";
 import ApiError from "../Utils/ApiError.js";
 import ApiResponse from "../Utils/ApiResponse.js";
-import { sendWelcomeEmail } from "../Utils/Email/EmailHandler.js";
+import {
+  sendWelcomeEmail,
+  sendVerificationEmail,
+} from "../Utils/Email/EmailHandler.js";
+
 const Login = (req, res) => {};
 
 const SignUp = async (req, res, next) => {
@@ -32,9 +36,21 @@ const SignUp = async (req, res, next) => {
     res.cookie("RefreshToken", RefreshToken);
     try {
       //Using Free Resend Account So Use the Email singed up with Resend
-      sendWelcomeEmail(user.email, user.fullName, process.env.CLIENT_URI);
+      await sendWelcomeEmail(user.email, user.fullName, process.env.CLIENT_URI);
     } catch (error) {
       console.log("Error Seding Email", error);
+    }
+
+    try {
+      const verificationToken = await user.GenerateEmailVerificationToken();
+      await sendVerificationEmail(
+        user.email,
+        user.fullName,
+        process.env.CLIENT_URI,
+        verificationToken
+      );
+    } catch (error) {
+      console.log("Error Seding Verfication Email", error);
     }
     return res
       .status(200)
@@ -44,4 +60,29 @@ const SignUp = async (req, res, next) => {
   }
 };
 
-export { Login, SignUp };
+const VerifyUser = async (req, res) => {
+  const token = req.params.token;
+  if (!token) {
+    return res.status(400).json(new ApiError(400, "Token is required"));
+  }
+
+  const user = await User.findOne({ VerificationToken: token });
+
+  if (!user) {
+    return res.status(401).json(new ApiError(401, "Invalid or expired token"));
+  }
+
+  // Check if token has expired
+  if (new Date() > new Date(user.verificationTokenExpires)) {
+    return res.status(410).json(new ApiError(410, "Verification token has expired"));
+  }
+
+  user.isVerified = true;
+  user.VerificationToken = undefined;
+  user.verificationTokenExpires = undefined;
+  await user.save();
+
+  return res.status(200).json(new ApiResponse(200, "User verification successful"));
+};
+
+export { Login, SignUp, VerifyUser };

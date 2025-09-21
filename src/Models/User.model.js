@@ -2,6 +2,8 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { type } from "os";
 const UserSchema = new mongoose.Schema(
   {
     username: {
@@ -54,7 +56,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-
+    verificationTokenExpires: {
+      type: String,
+      default: undefined,
+    },
     status: {
       type: String,
       enum: ["active", "suspended", "deleted"],
@@ -87,9 +92,22 @@ UserSchema.methods.GenerateAccessToken = function () {
 };
 UserSchema.methods.GenerateRefreshToken = function () {
   const payload = { id: this._id, username: this.username };
-  return jwt.sign(payload, process.env.JWT_SECRET, {
+  const RefreshToken = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES,
   });
+
+  this.refreshToken = RefreshToken;
+  return RefreshToken;
+};
+
+UserSchema.methods.GenerateEmailVerificationToken = async function () {
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+
+  this.VerificationToken = token;
+  this.verificationTokenExpires = expires;
+  await this.save();
+  return token;
 };
 
 const User = mongoose.model("User", UserSchema);

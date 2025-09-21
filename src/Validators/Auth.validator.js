@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 const SignUpValidator = [
   body("email").isEmail().withMessage("Invalid email"),
@@ -14,4 +14,7 @@ const SinginValidator = [
   body("email").isEmpty().whitelist("Please Provide Password"),
 ];
 
-export { SignUpValidator, SinginValidator };
+const VerificationTokenValidator = [
+  param("token").notEmpty().withMessage("Unauthorized access: token is missing"),
+];
+export { SignUpValidator, SinginValidator, VerificationTokenValidator };
