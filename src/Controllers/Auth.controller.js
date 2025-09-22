@@ -116,4 +116,9 @@ const VerifyUser = async (req, res) => {
     .json(new ApiResponse(200, "User verification successful"));
 };
 
-export { Login, SignUp, VerifyUser };
+const Logout = (_, res) => {
+  res.cookie("AccesToken", "");
+  res.cookie("RefreshToken", "");
+  return res.status(200).json(new ApiResponse(200, "Logout SuccessFull"));
+};
+export { Login, SignUp, VerifyUser, Logout };
