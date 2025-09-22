@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { check, body, param } from "express-validator";
 
 const SignUpValidator = [
   body("email").isEmail().withMessage("Invalid email"),
@@ -19,4 +19,19 @@ const VerificationTokenValidator = [
     .notEmpty()
     .withMessage("Unauthorized access: token is missing"),
 ];
-export { SignUpValidator, SinginValidator, VerificationTokenValidator };
+
+const UpdateProfileValidator = [
+  check("File").custom((value, { req }) => {
+    const file = req.file;
+    if (!file) {
+      throw new Error("Please Provide Profile Picture");
+    }
+    const allowedMimeTypes = ["image/jpeg", "image/png"];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new Error("Only JPEG and PNG files are allowed");
+    }
+    return true;
+  }),
+];
+
+export { SignUpValidator, SinginValidator, VerificationTokenValidator ,UpdateProfileValidator};

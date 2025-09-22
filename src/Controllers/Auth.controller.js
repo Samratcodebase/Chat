@@ -5,7 +5,8 @@ import ApiResponse from "../Utils/ApiResponse.js";
 import {
   sendWelcomeEmail,
   sendVerificationEmail,
-} from "../Utils/Email/EmailHandler.js";
+} from "../services/Email/EmailHandler.js";
+import imagekit from "../Lib/ImageKit.js";
 
 const Login = async (req, res) => {
   try {
@@ -99,7 +100,6 @@ const VerifyUser = async (req, res) => {
     return res.status(401).json(new ApiError(401, "Invalid or expired token"));
   }
 
-  // Check if token has expired
   if (new Date() > new Date(user.verificationTokenExpires)) {
     return res
       .status(410)
@@ -121,4 +121,43 @@ const Logout = (_, res) => {
   res.cookie("RefreshToken", "");
   return res.status(200).json(new ApiResponse(200, "Logout SuccessFull"));
 };
-export { Login, SignUp, VerifyUser, Logout };
+const updateProfile = async (req, res) => {
+  try {
+    // Debug: log req.user
+    console.log('updateProfile req.user:', req.user);
+    const userId = req.user && req.user._id;
+    if (!userId) {
+      return res.status(401).json(new ApiError(401, "Unauthorized Access"));
+    }
+
+    // Find user in DB
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json(new ApiError(404, "User not found"));
+    }
+
+    // Get file from req.file (set by multer)
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json(new ApiError(400, "No file uploaded"));
+    }
+
+    // Upload to ImageKit
+    const result = await imagekit.upload({
+      file: file.buffer,
+      fileName: file.originalname,
+      folder: "/profiles",
+    });
+    if (!result || !result.url) {
+      return res.status(500).json(new ApiError(500, "Image upload failed"));
+    }
+
+    user.avatarUrl = result.url;
+    await user.save();
+    return res.status(200).json(new ApiResponse(200, "File Upload Successful", result));
+  } catch (error) {
+    console.log("Error in updateProfile", error);
+    return res.status(500).json(new ApiError(500, "Internal Server Error Please Try Again Later"));
+  }
+};
+export { Login, SignUp, VerifyUser, Logout, updateProfile };
