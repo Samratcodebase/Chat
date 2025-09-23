@@ -116,33 +116,43 @@ const VerifyUser = async (req, res) => {
     .json(new ApiResponse(200, "User verification successful"));
 };
 
-const Logout = (_, res) => {
+const Logout = async (req, res) => {
+  const UserID = req.user._id;
+
+  const user = await User.findOne({ _id: UserID });
+  if (!user) {
+    return res.status(401).status(new ApiError(401, "Unauthorized Access"));
+  }
+
+  user.isAtiveNow = false;
+  await user.save();
+
   res.cookie("AccesToken", "");
   res.cookie("RefreshToken", "");
+
   return res.status(200).json(new ApiResponse(200, "Logout SuccessFull"));
 };
 const updateProfile = async (req, res) => {
   try {
-    // Debug: log req.user
-    console.log('updateProfile req.user:', req.user);
+   
+    console.log("updateProfile req.user:", req.user);
     const userId = req.user && req.user._id;
     if (!userId) {
       return res.status(401).json(new ApiError(401, "Unauthorized Access"));
     }
 
-    // Find user in DB
+    
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json(new ApiError(404, "User not found"));
     }
 
-    // Get file from req.file (set by multer)
+   
     const file = req.file;
     if (!file) {
       return res.status(400).json(new ApiError(400, "No file uploaded"));
     }
 
-    // Upload to ImageKit
     const result = await imagekit.upload({
       file: file.buffer,
       fileName: file.originalname,
@@ -154,10 +164,14 @@ const updateProfile = async (req, res) => {
 
     user.avatarUrl = result.url;
     await user.save();
-    return res.status(200).json(new ApiResponse(200, "File Upload Successful", result));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "File Upload Successful", result));
   } catch (error) {
     console.log("Error in updateProfile", error);
-    return res.status(500).json(new ApiError(500, "Internal Server Error Please Try Again Later"));
+    return res
+      .status(500)
+      .json(new ApiError(500, "Internal Server Error Please Try Again Later"));
   }
 };
 export { Login, SignUp, VerifyUser, Logout, updateProfile };

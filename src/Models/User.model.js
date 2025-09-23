@@ -60,6 +60,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: undefined,
     },
+    isAtiveNow: {
+      type: Boolean,
+      default: true,
+    },
     status: {
       type: String,
       enum: ["active", "suspended", "deleted"],
@@ -115,7 +119,6 @@ UserSchema.methods.GenerateEmailVerificationToken = async function () {
   await this.save();
   return token;
 };
-
 
 const User = mongoose.model("User", UserSchema);
 

@@ -7,22 +7,19 @@ const AuthMiddleware = async (req, res, next) => {
     const accessToken = req.cookies?.AccesToken;
     const refreshToken = req.cookies?.RefreshToken;
 
-    // Debug: log cookies
-    console.log('AuthMiddleware cookies:', req.cookies);
-
     if (!accessToken) {
       if (!refreshToken) {
         return res.status(401).json(new ApiError(401, "Unauthorized Access"));
       }
 
       const decodedRefresh = VerifyToken(refreshToken);
-      console.log('AuthMiddleware decodedRefresh:', decodedRefresh);
+ 
       if (!decodedRefresh.valid) {
         return res.status(401).json(new ApiError(401, "Invalid Refresh Token"));
       }
 
       const user = await User.findById(decodedRefresh.decoded.id);
-      console.log('AuthMiddleware user from refresh:', user);
+      console.log("AuthMiddleware user from refresh:", user);
       if (!user) {
         return res.status(401).json(new ApiError(401, "Unauthorized Access"));
       }
@@ -44,24 +41,25 @@ const AuthMiddleware = async (req, res, next) => {
       });
 
       req.user = user;
-      console.log('AuthMiddleware req.user (refresh):', req.user);
+
       return next();
     }
 
     const decodedAccess = await VerifyToken(accessToken);
-    console.log('AuthMiddleware decodedAccess:', decodedAccess);
+
     if (!decodedAccess.valid) {
       return res.status(401).json(new ApiError(401, "Unauthorized Access"));
     }
 
     const user = await User.findById(decodedAccess.decoded.id);
-    console.log('AuthMiddleware user from access:', user);
+
     if (!user) {
       return res.status(401).json(new ApiError(401, "Unauthorized Access"));
     }
 
     req.user = user;
-    console.log('AuthMiddleware req.user (access):', req.user);
+    console.log("AuthMiddleare User Check", user);
+
     next();
   } catch (error) {
     console.error("AuthMiddleware error:", error);
