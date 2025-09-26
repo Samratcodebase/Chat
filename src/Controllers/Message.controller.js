@@ -19,7 +19,36 @@ const AllContacts = async (req, res) => {
   }
 };
 
-const Chats = () => {};
+const Chats = async (req, res, next) => {
+  try {
+    const loggedInUserId = req.user.id;
+    //Find All the Msges Where The  either the sender or Reciver is logged in user
+    const messages = await Message.find({
+      $or: [{ senderID: loggedInUserId }, { receiverID: loggedInUserId }],
+    });
+
+    const chatuserIDs = [
+      ...new Set(
+        messages.map((message) => {
+          return message.senderID.toString() === loggedInUserId
+            ? message.receiverID.toString()
+            : message.senderID.toString();
+        })
+      ),
+    ];
+
+    const ChatPartners = await User.find({ _id: { $in: chatuserIDs } }).select(
+      "-passwrod"
+    );
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Messsage Fetch Successfull", ChatPartners));
+  } catch (error) {
+    res.status(401).json(new ApiError(401, "Error   Fetching Messages"));
+    next(error.message);
+  }
+};
 
 const MessagesByUserID = async (req, res, next) => {
   try {
